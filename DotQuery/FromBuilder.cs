@@ -2,22 +2,16 @@
 
 namespace DotQuery;
 
-public class FromBuilder<T> : QueryBuilder
+public class FromBuilder<T> : IQueryBuilder
 {
-    private readonly string _tableName;
+    internal SqlFormattableString FromStatement { get; } = new SqlFormattableStringBuilder().AppendRaw(typeof(T).Name).Build();
 
-    public FromBuilder()
-    {
-        _tableName = typeof(T).Name; // Could be customized with attributes
-    }
+    public WhereBuilder<T> Where(Expression<Func<T, bool>> predicate) => new(this, predicate);
 
-    public WhereBuilder<T> Where(Expression<Func<T, bool>> predicate)
-    {
-        return new WhereBuilder<T>(this, predicate);
-    }
-
-    public override string BuildSql()
-    {
-        return $"SELECT * FROM {_tableName}";
-    }
+    public SqlFormattableString Build() =>
+        new SqlFormattableStringBuilder()
+            .AppendRawLine("select *")
+            .AppendRaw("from ")
+            .AppendLine(FromStatement)
+            .Build();
 }
