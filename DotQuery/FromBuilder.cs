@@ -11,7 +11,6 @@ public class FromBuilder<T> : IQueryBuilder
     public SqlFormattableString Build() =>
         new SqlFormattableStringBuilder()
             .AppendRawLine("select *")
-            .AppendRaw("from ")
-            .Append(FromStatement)
+            .AppendRaw("from ").Append(FromStatement)
             .Build();
 }

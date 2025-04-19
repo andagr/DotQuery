@@ -5,13 +5,14 @@ namespace DotQuery;
 public class WhereBuilder<T> : IQueryBuilder
 {
     private readonly FromBuilder<T> _fromBuilder;
-    private readonly Expression<Func<T, bool>> _predicate;
 
     public WhereBuilder(FromBuilder<T> fromBuilder, Expression<Func<T, bool>> predicate)
     {
         _fromBuilder = fromBuilder;
-        _predicate = predicate;
+        Predicate = predicate;
     }
+
+    internal Expression<Func<T, bool>> Predicate { get; }
 
     public SelectBuilder<T, TResult> Select<TResult>(Expression<Func<T, TResult>> selector)
     {
@@ -21,14 +22,12 @@ public class WhereBuilder<T> : IQueryBuilder
     public SqlFormattableString Build()
     {
         var visitor = new TSqlExpressionVisitor();
-        visitor.Visit(_predicate.Body);
+        visitor.Visit(Predicate.Body);
 
         return new SqlFormattableStringBuilder()
             .AppendRawLine("select *")
-            .AppendRaw("from ")
-            .AppendLine(_fromBuilder.FromStatement)
-            .AppendRaw("where ")
-            .Append(visitor.Build())
+            .AppendRaw("from ").AppendLine(_fromBuilder.FromStatement)
+            .AppendRaw("where ").Append(visitor.Build())
             .Build();
     }
 }
