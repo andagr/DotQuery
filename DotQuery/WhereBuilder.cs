@@ -15,7 +15,7 @@ public class WhereBuilder<T> : IQueryBuilder
 
     public SelectBuilder<T, TResult> Select<TResult>(Expression<Func<T, TResult>> selector)
     {
-        return new SelectBuilder<T, TResult>(this, selector);
+        return new SelectBuilder<T, TResult>(_fromBuilder, this, selector);
     }
 
     public SqlFormattableString Build()
@@ -28,7 +28,7 @@ public class WhereBuilder<T> : IQueryBuilder
             .AppendRaw("from ")
             .AppendLine(_fromBuilder.FromStatement)
             .AppendRaw("where ")
-            .AppendLine(visitor.Build())
+            .Append(visitor.Build())
             .Build();
     }
 }

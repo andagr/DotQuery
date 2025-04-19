@@ -9,21 +9,49 @@ internal class TSqlExpressionVisitor : ExpressionVisitor
 
     protected override Expression VisitBinary(BinaryExpression node)
     {
-        Visit(node.Left);
-
-        switch (node.NodeType)
+        var binaryOperators = new Dictionary<ExpressionType, string>
         {
-            case ExpressionType.Equal:
-                _builder.AppendRaw(" = ");
-                break;
-            case ExpressionType.NotEqual:
-                _builder.AppendRaw(" <> ");
-                break;
-            default:
-                throw new NotSupportedException($"Unsupported binary operator: {node.NodeType}");
+            [ExpressionType.Equal] = "=",
+            [ExpressionType.NotEqual] = "<>",
+            [ExpressionType.GreaterThan] = ">",
+            [ExpressionType.GreaterThanOrEqual] = ">=",
+            [ExpressionType.LessThan] = "<",
+            [ExpressionType.LessThanOrEqual] = "<=",
+            [ExpressionType.AndAlso] = "and",
+            [ExpressionType.OrElse] = "or"
+        };
+
+        if (node.Left is BinaryExpression { NodeType: ExpressionType.OrElse })
+        {
+            _builder.AppendRaw("(");
+            Visit(node.Left);
+            _builder.AppendRaw(")");
+        }
+        else
+        {
+            Visit(node.Left);
         }
 
-        Visit(node.Right);
+        if (binaryOperators.TryGetValue(node.NodeType, out var op))
+        {
+            _builder.AppendRaw($" {op} ");
+        }
+        else
+        {
+            throw new NotSupportedException($"Unsupported binary operator: {node.NodeType}");
+        }
+
+        if (node.Right is BinaryExpression { NodeType: ExpressionType.OrElse })
+        {
+            _builder.AppendRaw("(");
+            Visit(node.Right);
+            _builder.AppendRaw(")");
+        }
+        else
+        {
+            Visit(node.Right);
+        }
+
         return node;
     }
 
