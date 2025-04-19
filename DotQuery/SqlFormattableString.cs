@@ -19,10 +19,13 @@ public sealed class SqlFormattableString : FormattableString
     public override object? GetArgument(int index) => _arguments[index];
 
     public override string ToString(IFormatProvider? formatProvider) =>
-        throw new NotSupportedException($"ToString creates a raw SQL statement, which could be unsafe with regards to SQL injection. Use {nameof(ToRawString)} instead.");
+        throw new NotSupportedException(
+            $"{nameof(ToString)} creates a raw, unparameterized, SQL statement, which could " +
+            $"be unsafe with regards to SQL injection. Use {nameof(ToRawString)} instead.");
 
     /// <summary>
-    /// Dangerously converts the SQL statement to a raw string. This should only be used when you are sure that the SQL statement is safe from SQL injection.
+    /// Dangerously converts the parameterized SQL statement to a raw string. This should only
+    /// be used when you are sure that the SQL statement is safe from SQL injection.
     /// </summary>
     public string ToRawString(IFormatProvider? formatProvider = null)
     {
