@@ -35,7 +35,7 @@ internal class SqlFormattableStringBuilder
         return this;
     }
 
-    public SqlFormattableStringBuilder AppendRawLine(string value)
+    public SqlFormattableStringBuilder AppendRawLine(string? value = null)
     {
         _format.AppendLine(value);
         return this;

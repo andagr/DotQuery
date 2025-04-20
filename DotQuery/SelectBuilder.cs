@@ -25,10 +25,11 @@ public class SelectBuilder<T, TSelection> : IQueryBuilder
 
         var builder = new SqlFormattableStringBuilder()
             .AppendRaw("select ").AppendLine(projectionVisitor.Build())
-            .AppendRaw("from ").AppendLine(_fromBuilder.FromStatement);
+            .AppendRaw("from ").Append(_fromBuilder.FromStatement);
 
         if (_whereBuilder is not null)
         {
+            builder.AppendRawLine();
             var whereVisitor = new PredicateExpressionVisitor();
             whereVisitor.Visit(_whereBuilder.Predicate.Body);
             builder.AppendRaw("where ").Append(whereVisitor.Build());

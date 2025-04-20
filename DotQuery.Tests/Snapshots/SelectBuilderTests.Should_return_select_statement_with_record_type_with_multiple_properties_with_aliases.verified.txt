@@ -1,0 +1,2 @@
+﻿select Name as ProductName, Price as ProductPrice
+from Order

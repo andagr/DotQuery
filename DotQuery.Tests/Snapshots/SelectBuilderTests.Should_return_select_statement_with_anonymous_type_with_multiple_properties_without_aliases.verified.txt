@@ -1,0 +1,2 @@
+﻿select Name, Price
+from Order
