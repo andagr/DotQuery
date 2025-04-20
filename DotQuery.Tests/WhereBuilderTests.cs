@@ -76,9 +76,23 @@ public partial class WhereBuilderTests
     }
 
     [TestMethod]
+    public async Task Should_return_where_statement_with_multiple_separate_logical_operators_with_not()
+    {
+        var sql = DotQuery.From<Order>().Where(o => o.Name == "TV" && !(o.Price > 1000) || o.Price < 9000).Build();
+        await Verify(sql.Format);
+    }
+
+    [TestMethod]
     public async Task Should_return_where_statement_with_multiple_grouped_logical_operators()
     {
         var sql = DotQuery.From<Order>().Where(o => o.Name == "TV" && (o.Price > 1000 || o.Price < 9000)).Build();
+        await Verify(sql.Format);
+    }
+
+    [TestMethod]
+    public async Task Should_return_where_statement_with_multiple_grouped_logical_operators_with_not()
+    {
+        var sql = DotQuery.From<Order>().Where(o => o.Name == "TV" && !(o.Price > 1000 || o.Price < 9000)).Build();
         await Verify(sql.Format);
     }
 

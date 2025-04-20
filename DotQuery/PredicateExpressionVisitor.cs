@@ -55,6 +55,28 @@ internal class PredicateExpressionVisitor : ExpressionVisitor
         return node;
     }
 
+    protected override Expression VisitUnary(UnaryExpression node)
+    {
+        if (node.NodeType != ExpressionType.Not)
+        {
+            return node;
+        }
+
+        _builder.AppendRaw("not ");
+        if (node.Operand is BinaryExpression { NodeType: ExpressionType.OrElse })
+        {
+            _builder.AppendRaw("(");
+            Visit(node.Operand);
+            _builder.AppendRaw(")");
+        }
+        else
+        {
+            Visit(node.Operand);
+        }
+
+        return node;
+    }
+
     protected override Expression VisitMember(MemberExpression node)
     {
         _builder.AppendRaw($"{node.Member.Name}");
