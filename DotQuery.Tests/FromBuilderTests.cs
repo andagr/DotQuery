@@ -20,5 +20,12 @@ public partial class FromBuilderTests
         await Verify(sql);
     }
 
+    [TestMethod]
+    public async Task Should_return_select_statement()
+    {
+        var sql = DotQuery.From<Order>().Select(o => new { o.Name }).Build();
+        await Verify(sql.Format);
+    }
+
     private record Order(int Id, string Name);
 }

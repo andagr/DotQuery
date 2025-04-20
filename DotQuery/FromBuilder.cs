@@ -8,6 +8,9 @@ public class FromBuilder<T> : IQueryBuilder
 
     public WhereBuilder<T> Where(Expression<Func<T, bool>> predicate) => new(this, predicate);
 
+    public SelectBuilder<T, TResult> Select<TResult>(Expression<Func<T, TResult>> selector) =>
+        new(this, null, selector);
+
     public SqlFormattableString Build() =>
         new SqlFormattableStringBuilder()
             .AppendRawLine("select *")
