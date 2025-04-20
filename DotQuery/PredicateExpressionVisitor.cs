@@ -3,7 +3,7 @@
 namespace DotQuery;
 
 // ReSharper disable once InconsistentNaming
-internal class TSqlExpressionVisitor : ExpressionVisitor
+internal class PredicateExpressionVisitor : ExpressionVisitor
 {
     private readonly SqlFormattableStringBuilder _builder = new();
 

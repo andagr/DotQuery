@@ -21,7 +21,7 @@ public class WhereBuilder<T> : IQueryBuilder
 
     public SqlFormattableString Build()
     {
-        var visitor = new TSqlExpressionVisitor();
+        var visitor = new PredicateExpressionVisitor();
         visitor.Visit(Predicate.Body);
 
         return new SqlFormattableStringBuilder()

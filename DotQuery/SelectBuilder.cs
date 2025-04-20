@@ -5,12 +5,12 @@ namespace DotQuery;
 public class SelectBuilder<T, TSelection> : IQueryBuilder
 {
     private readonly FromBuilder<T> _fromBuilder;
-    private readonly WhereBuilder<T> _whereBuilder;
+    private readonly WhereBuilder<T>? _whereBuilder;
     private readonly Expression<Func<T, TSelection>> _selector;
 
     public SelectBuilder(
         FromBuilder<T> fromBuilder,
-        WhereBuilder<T> whereBuilder,
+        WhereBuilder<T>? whereBuilder,
         Expression<Func<T, TSelection>> selector)
     {
         _fromBuilder = fromBuilder;
@@ -20,16 +20,20 @@ public class SelectBuilder<T, TSelection> : IQueryBuilder
 
     public SqlFormattableString Build()
     {
-        var projectionVisitor = new TSqlExpressionVisitor();
+        var projectionVisitor = new ProjectionExpressionVisitor();
         projectionVisitor.Visit(_selector.Body);
 
-        var whereVisitor = new TSqlExpressionVisitor();
-        whereVisitor.Visit(_whereBuilder.Predicate.Body);
-
-        return new SqlFormattableStringBuilder()
+        var builder = new SqlFormattableStringBuilder()
             .AppendRaw("select ").AppendLine(projectionVisitor.Build())
-            .AppendRaw("from ").AppendLine(_fromBuilder.FromStatement)
-            .AppendRaw("where ").Append(whereVisitor.Build())
-            .Build();
+            .AppendRaw("from ").AppendLine(_fromBuilder.FromStatement);
+
+        if (_whereBuilder is not null)
+        {
+            var whereVisitor = new PredicateExpressionVisitor();
+            whereVisitor.Visit(_whereBuilder.Predicate.Body);
+            builder.AppendRaw("where ").Append(whereVisitor.Build());
+        }
+
+        return builder.Build();
     }
 }
