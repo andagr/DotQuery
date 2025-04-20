@@ -96,5 +96,15 @@ public partial class WhereBuilderTests
         await Verify(sql.Format);
     }
 
+    [TestMethod]
+    public async Task Should_return_where_statement_with_multiple_where_clauses()
+    {
+        var sql = DotQuery.From<Order>()
+            .Where(o => o.Name == "TV")
+            .Where(o => o.Price > 1000 || o.Price < 9000)
+            .Build();
+        await Verify(sql.Format);
+    }
+
     private record Order(int Id, string Name, int Price);
 }

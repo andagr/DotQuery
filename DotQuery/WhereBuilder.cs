@@ -14,10 +14,15 @@ public class WhereBuilder<T> : IQueryBuilder
 
     internal Expression<Func<T, bool>> Predicate { get; }
 
-    public SelectBuilder<T, TResult> Select<TResult>(Expression<Func<T, TResult>> selector)
-    {
-        return new SelectBuilder<T, TResult>(_fromBuilder, this, selector);
-    }
+    public SelectBuilder<T, TResult> Select<TResult>(Expression<Func<T, TResult>> selector) =>
+        new(_fromBuilder, this, selector);
+
+    public WhereBuilder<T> Where(Expression<Func<T, bool>> predicate) =>
+        new(
+            _fromBuilder,
+            Expression.Lambda<Func<T, bool>>(
+                Expression.AndAlso(Predicate.Body, predicate.Body),
+                Predicate.Parameters));
 
     public SqlFormattableString Build()
     {
