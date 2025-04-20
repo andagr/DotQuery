@@ -89,5 +89,27 @@ internal class PredicateExpressionVisitor : ExpressionVisitor
         return node;
     }
 
+    protected override Expression VisitMethodCall(MethodCallExpression node)
+    {
+        if (node.Method.DeclaringType == typeof(Operators) &&
+            node.Method.Name == nameof(Operators.In))
+        {
+            Visit(node.Arguments[0]);
+            _builder.AppendRaw(" in (");
+            for (var i = 1; i < node.Arguments.Count; i++)
+            {
+                Visit(node.Arguments[i]);
+                if (i < node.Arguments.Count - 1)
+                {
+                    _builder.AppendRaw(", ");
+                }
+            }
+
+            _builder.AppendRaw(")");
+        }
+
+        return node;
+    }
+
     public SqlFormattableString Build() => _builder.Build();
 }

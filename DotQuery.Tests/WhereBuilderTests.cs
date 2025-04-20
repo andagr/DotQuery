@@ -106,5 +106,12 @@ public partial class WhereBuilderTests
         await Verify(sql.Format);
     }
 
+    [TestMethod]
+    public async Task Should_return_where_statement_with_in_statement()
+    {
+        var sql = DotQuery.From<Order>().Where(o => o.Name.In("TV", "Radio")).Build();
+        await Verify(sql.Format);
+    }
+
     private record Order(int Id, string Name, int Price);
 }
