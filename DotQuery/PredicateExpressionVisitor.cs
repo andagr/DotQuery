@@ -1,4 +1,6 @@
-﻿using System.Linq.Expressions;
+﻿using System.Collections;
+using System.Linq.Expressions;
+using System.Reflection;
 
 namespace DotQuery;
 
@@ -79,7 +81,34 @@ internal class PredicateExpressionVisitor : ExpressionVisitor
 
     protected override Expression VisitMember(MemberExpression node)
     {
-        _builder.AppendRaw($"{node.Member.Name}");
+        if (node is { Expression: ConstantExpression constantExpression, Member: FieldInfo fieldInfo })
+        {
+            // Handle closure: Get the value of the captured variable
+            var capturedValueObject = fieldInfo.GetValue(constantExpression.Value);
+            if (capturedValueObject is IEnumerable<object> capturedValues)
+            {
+                var capturedValuesArray = capturedValues.ToArray();
+                for (var i = 0; i < capturedValuesArray.Length; i++)
+                {
+                    _builder.Append($"{capturedValuesArray[i]}");
+
+                    if (i < capturedValuesArray.Length - 1)
+                    {
+                        _builder.AppendRaw(", ");
+                    }
+                }
+            }
+            else
+            {
+                _builder.Append($"{capturedValueObject}");
+            }
+        }
+        else
+        {
+            // Handle regular member access
+            _builder.AppendRaw($"{node.Member.Name}");
+        }
+
         return node;
     }
 

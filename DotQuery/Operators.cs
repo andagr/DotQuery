@@ -7,4 +7,9 @@ public static class Operators
     {
         throw new NotSupportedException("This method should only be used in DotQuery expressions");
     }
+
+    public static bool In<T>(this T property, T[] values)
+    {
+        throw new NotSupportedException("This method should only be used in DotQuery expressions");
+    }
 }

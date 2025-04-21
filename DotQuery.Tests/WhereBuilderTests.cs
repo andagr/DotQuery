@@ -113,5 +113,29 @@ public partial class WhereBuilderTests
         await Verify(sql.Format);
     }
 
+    [TestMethod]
+    public async Task Should_return_where_statement_with_not_in_statement()
+    {
+        var sql = DotQuery.From<Order>().Where(o => !o.Name.In("TV", "Radio")).Build();
+        await Verify(sql.Format);
+    }
+
+    [TestMethod]
+    public async Task Should_return_parameterized_where_statement_with_in_statement_with_enumerable_value()
+    {
+        var inValues = new[] { "TV", "Radio" };
+        var sql = DotQuery.From<Order>().Where(o => o.Name.In(inValues)).Build();
+        await Verify(sql.Format);
+    }
+
+    [TestMethod]
+    public async Task Should_return_where_statement_with_in_statement_with_enumerable_value()
+    {
+        var inValues = new[] { "TV", "Radio" };
+        var sql = DotQuery.From<Order>().Where(o => o.Name.In(inValues)).Build();
+        await Verify(sql.ToRawString());
+    }
+
+
     private record Order(int Id, string Name, int Price);
 }
