@@ -1,4 +1,6 @@
-﻿// ReSharper disable NotAccessedPositionalProperty.Local
+﻿using static DotQuery.Operators;
+
+// ReSharper disable NotAccessedPositionalProperty.Local
 // ReSharper disable ClassNeverInstantiated.Local
 namespace DotQuery.Tests;
 
@@ -136,6 +138,14 @@ public partial class WhereBuilderTests
         await Verify(sql.ToRawString());
     }
 
+    [TestMethod]
+    public async Task Should_return_where_statement_with_exists_statement()
+    {
+        var sql = DotQuery.From<Order>().Where(o => Exists(DotQuery.From<Product>().Where(p => p.Name == o.Name))).Build();
+        await Verify(sql.Format);
+    }
+
 
     private record Order(int Id, string Name, int Price);
+    private record Product(int Id, string Name, int Price);
 }

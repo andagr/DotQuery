@@ -12,4 +12,9 @@ public static class Operators
     {
         throw new NotSupportedException("This method should only be used in DotQuery expressions");
     }
+
+    public static bool Exists(IQueryBuilder query)
+    {
+        throw new NotSupportedException("This method should only be used in DotQuery expressions");
+    }
 }

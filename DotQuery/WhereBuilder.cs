@@ -4,35 +4,33 @@ namespace DotQuery;
 
 public class WhereBuilder<T> : IQueryBuilder
 {
-    private readonly FromBuilder<T> _fromBuilder;
+    internal Expression SqlExpression { get; }
 
-    public WhereBuilder(FromBuilder<T> fromBuilder, Expression<Func<T, bool>> predicate)
+    internal WhereBuilder(FromBuilder<T> fromBuilder, Expression<Func<T, bool>> predicate)
     {
-        _fromBuilder = fromBuilder;
-        Predicate = predicate;
+        SqlExpression = Expression.Call(
+            fromBuilder.SqlExpression,
+            typeof(FromBuilder<T>).GetMethod(nameof(FromBuilder<T>.Where))!,
+            Expression.Constant(predicate));
     }
 
-    internal Expression<Func<T, bool>> Predicate { get; }
+    private WhereBuilder(WhereBuilder<T> whereBuilder, Expression<Func<T, bool>> predicate)
+    {
+        SqlExpression = Expression.Call(
+            whereBuilder.SqlExpression,
+            typeof(WhereBuilder<T>).GetMethod(nameof(Where))!,
+            Expression.Constant(predicate));
+    }
+
+    public WhereBuilder<T> Where(Expression<Func<T, bool>> predicate) => new(this, predicate);
 
     public SelectBuilder<T, TResult> Select<TResult>(Expression<Func<T, TResult>> selector) =>
-        new(_fromBuilder, this, selector);
-
-    public WhereBuilder<T> Where(Expression<Func<T, bool>> predicate) =>
-        new(
-            _fromBuilder,
-            Expression.Lambda<Func<T, bool>>(
-                Expression.AndAlso(Predicate.Body, predicate.Body),
-                Predicate.Parameters));
+        new(this, selector);
 
     public SqlFormattableString Build()
     {
-        var visitor = new PredicateExpressionVisitor();
-        visitor.Visit(Predicate.Body);
-
-        return new SqlFormattableStringBuilder()
-            .AppendRawLine("select *")
-            .AppendRaw("from ").AppendLine(_fromBuilder.FromStatement)
-            .AppendRaw("where ").Append(visitor.Build())
-            .Build();
+        var visitor = new SqlExpressionVisitor();
+        visitor.Visit(SqlExpression);
+        return visitor.Build();
     }
 }

@@ -4,37 +4,36 @@ namespace DotQuery;
 
 public class SelectBuilder<T, TSelection> : IQueryBuilder
 {
-    private readonly FromBuilder<T> _fromBuilder;
-    private readonly WhereBuilder<T>? _whereBuilder;
-    private readonly Expression<Func<T, TSelection>> _selector;
+    internal Expression SqlExpression { get; }
 
-    public SelectBuilder(
+    internal SelectBuilder(
         FromBuilder<T> fromBuilder,
-        WhereBuilder<T>? whereBuilder,
         Expression<Func<T, TSelection>> selector)
     {
-        _fromBuilder = fromBuilder;
-        _whereBuilder = whereBuilder;
-        _selector = selector;
+        SqlExpression = Expression.Call(
+            fromBuilder.SqlExpression,
+            typeof(FromBuilder<T>)
+                .GetMethod(nameof(FromBuilder<T>.Select))!
+                .MakeGenericMethod(typeof(TSelection)),
+            Expression.Constant(selector));
+    }
+
+    internal SelectBuilder(
+        WhereBuilder<T> whereBuilder,
+        Expression<Func<T, TSelection>> selector)
+    {
+        SqlExpression = Expression.Call(
+            whereBuilder.SqlExpression,
+            typeof(WhereBuilder<T>)
+                .GetMethod(nameof(WhereBuilder<T>.Select))!
+                .MakeGenericMethod(typeof(TSelection)),
+            Expression.Constant(selector));
     }
 
     public SqlFormattableString Build()
     {
-        var projectionVisitor = new ProjectionExpressionVisitor();
-        projectionVisitor.Visit(_selector.Body);
-
-        var builder = new SqlFormattableStringBuilder()
-            .AppendRaw("select ").AppendLine(projectionVisitor.Build())
-            .AppendRaw("from ").Append(_fromBuilder.FromStatement);
-
-        if (_whereBuilder is not null)
-        {
-            builder.AppendRawLine();
-            var whereVisitor = new PredicateExpressionVisitor();
-            whereVisitor.Visit(_whereBuilder.Predicate.Body);
-            builder.AppendRaw("where ").Append(whereVisitor.Build());
-        }
-
-        return builder.Build();
+        var visitor = new SqlExpressionVisitor();
+        visitor.Visit(SqlExpression);
+        return visitor.Build();
     }
 }

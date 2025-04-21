@@ -46,4 +46,10 @@ internal class SqlFormattableStringBuilder
         var sql = _format.ToString();
         return new SqlFormattableString(sql, _arguments.ToArray());
     }
+
+    public void Clear()
+    {
+        _format.Clear();
+        _arguments.Clear();
+    }
 }

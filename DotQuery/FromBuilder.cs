@@ -4,16 +4,25 @@ namespace DotQuery;
 
 public class FromBuilder<T> : IQueryBuilder
 {
-    internal SqlFormattableString FromStatement { get; } = new(typeof(T).Name, []);
+    internal Expression SqlExpression { get; }
+
+    internal FromBuilder()
+    {
+        SqlExpression = Expression.Call(
+            typeof(DotQuery),
+            nameof(DotQuery.From),
+            [typeof(T)]);
+    }
 
     public WhereBuilder<T> Where(Expression<Func<T, bool>> predicate) => new(this, predicate);
 
     public SelectBuilder<T, TResult> Select<TResult>(Expression<Func<T, TResult>> selector) =>
-        new(this, null, selector);
+        new(this, selector);
 
-    public SqlFormattableString Build() =>
-        new SqlFormattableStringBuilder()
-            .AppendRawLine("select *")
-            .AppendRaw("from ").Append(FromStatement)
-            .Build();
+    public SqlFormattableString Build()
+    {
+        var visitor = new SqlExpressionVisitor();
+        visitor.Visit(SqlExpression);
+        return visitor.Build();
+    }
 }
