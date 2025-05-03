@@ -41,9 +41,13 @@ internal class WhereExpressionVisitor : ExpressionVisitor
 
     public void HandleWhere(MethodCallExpression node)
     {
-        if (node.Arguments[0] is ConstantExpression { Value: LambdaExpression lambda })
+        if (node.Arguments[0] is ConstantExpression { Value: LambdaExpression constantLambda })
         {
-            _predicates.Add(lambda);
+            _predicates.Add(constantLambda);
+        }
+        else if (node.Arguments[0] is UnaryExpression { Operand: LambdaExpression unaryLambda })
+        {
+            _predicates.Add(unaryLambda);
         }
     }
 
