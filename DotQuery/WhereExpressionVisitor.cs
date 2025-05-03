@@ -5,7 +5,7 @@ namespace DotQuery;
 
 internal class WhereExpressionVisitor : ExpressionVisitor
 {
-    private static readonly Dictionary<ExpressionType, string> BinaryOperators = new Dictionary<ExpressionType, string>
+    private static readonly Dictionary<ExpressionType, string> BinaryOperators = new()
     {
         [ExpressionType.Equal] = "=",
         [ExpressionType.NotEqual] = "<>",
@@ -18,15 +18,32 @@ internal class WhereExpressionVisitor : ExpressionVisitor
     };
 
     private readonly SqlFormattableStringBuilder _builder = new();
-    private LambdaExpression? _predicate;
+    private readonly List<LambdaExpression> _predicates = [];
 
-    public SqlFormattableString Build() => _builder.Build();
-
-    public void VisitWhereMethod(MethodCallExpression node)
+    public SqlFormattableString Build()
     {
-        foreach(var argument in node.Arguments)
+        if (_predicates.Any())
         {
-            Visit(argument);
+            var andPredicate = _predicates
+                .AsEnumerable()
+                // Order is reversed, as evaluation of statements starts from the end, to preserve
+                // the same order in the built query as in the order of the where statements.
+                .Reverse()
+                .Aggregate((p, c) =>
+                    Expression.Lambda(
+                        Expression.AndAlso(p.Body, c.Body),
+                        p.Parameters));
+            Visit(andPredicate);
+        }
+
+        return _builder.Build();
+    }
+
+    public void HandleWhere(MethodCallExpression node)
+    {
+        if (node.Arguments[0] is ConstantExpression { Value: LambdaExpression lambda })
+        {
+            _predicates.Add(lambda);
         }
     }
 
@@ -34,23 +51,8 @@ internal class WhereExpressionVisitor : ExpressionVisitor
     {
         if (node.Value is LambdaExpression lambda)
         {
-            // Each where statement contains a lambda expression, start with an empty builder and
-            // append the existing expression to the new predicate using "and".
-            // Order is reversed as evaluation of where statements starts from the end to preserve
-            // the same order in the built query as in the order of the where statements.
-            _builder.Clear();
-
-            _predicate = _predicate is null
-                ? lambda
-                : Expression.Lambda(
-                    Expression.AndAlso(lambda.Body, _predicate.Body),
-                    _predicate.Parameters);
-
-            // Visit the body of the lambda expression
-            Visit(_predicate.Body);
-
-            // Optionally, visit the parameters of the lambda
-            foreach (var parameter in _predicate.Parameters)
+            Visit(lambda.Body);
+            foreach (var parameter in lambda.Parameters)
             {
                 Visit(parameter);
             }
@@ -123,21 +125,32 @@ internal class WhereExpressionVisitor : ExpressionVisitor
 
     protected override Expression VisitMethodCall(MethodCallExpression node)
     {
-        if (node.Method.DeclaringType == typeof(Operators) &&
-            node.Method.Name == nameof(Operators.In))
+        if (node.Method.DeclaringType == typeof(Operators))
         {
-            Visit(node.Arguments[0]);
-            _builder.AppendRaw(" in (");
-            for (var i = 1; i < node.Arguments.Count; i++)
+            if (node.Method.Name == nameof(Operators.In))
             {
-                Visit(node.Arguments[i]);
-                if (i < node.Arguments.Count - 1)
+                Visit(node.Arguments[0]);
+                _builder.AppendRaw(" in (");
+                for (var i = 1; i < node.Arguments.Count; i++)
                 {
-                    _builder.AppendRaw(", ");
+                    Visit(node.Arguments[i]);
+                    if (i < node.Arguments.Count - 1)
+                    {
+                        _builder.AppendRaw(", ");
+                    }
                 }
-            }
 
-            _builder.AppendRaw(")");
+                _builder.AppendRaw(")");
+            }
+            else if (node.Method.Name == nameof(Operators.Exists))
+            {
+                _builder.AppendRaw("exists (");
+                var sqlVisitor = new SqlExpressionVisitor();
+                sqlVisitor.Visit(node.Arguments[0]);
+                var sql = sqlVisitor.Build();
+                _builder.Append(sql);
+                _builder.AppendRaw(")");
+            }
         }
 
         return node;

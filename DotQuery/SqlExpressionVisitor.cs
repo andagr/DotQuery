@@ -12,15 +12,15 @@ internal class SqlExpressionVisitor : ExpressionVisitor
     {
         if (node.Method.ReturnType.GetGenericTypeDefinition() == typeof(FromBuilder<>))
         {
-            _fromExpressionVisitor.VisitFromMethod(node);
+            _fromExpressionVisitor.HandleFrom(node);
         }
         else if (node.Method.ReturnType.GetGenericTypeDefinition() == typeof(WhereBuilder<>))
         {
-            _whereExpressionVisitor.VisitWhereMethod(node);
+            _whereExpressionVisitor.HandleWhere(node);
         }
         else if (node.Method.ReturnType.GetGenericTypeDefinition() == typeof(SelectBuilder<,>))
         {
-            _selectExpressionVisitor.VisitSelectMethod(node);
+            _selectExpressionVisitor.HandleSelect(node);
         }
 
         return node.Object is not null ? Visit(node.Object) : node;

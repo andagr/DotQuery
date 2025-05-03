@@ -6,7 +6,7 @@ internal class FromExpressionVisitor : ExpressionVisitor
 {
     public string FromTable { get; private set; } = "";
 
-    public void VisitFromMethod(MethodCallExpression node)
+    public void HandleFrom(MethodCallExpression node)
     {
         FromTable = node.Method.GetGenericArguments().Single().Name;
     }

@@ -11,7 +11,7 @@ internal class SelectExpressionVisitor : ExpressionVisitor
 
     public SqlFormattableString Build() => _builder.Build();
 
-    public void VisitSelectMethod(MethodCallExpression node)
+    public void HandleSelect(MethodCallExpression node)
     {
         foreach(var argument in node.Arguments)
         {
