@@ -30,7 +30,7 @@ internal class SqlExpressionVisitor : ExpressionVisitor
     {
         var sqlBuilder = new SqlFormattableStringBuilder();
         var projections = _selectExpressionVisitor.Build();
-        var fromTable = _fromExpressionVisitor.FromTable;
+        var fromTable = _fromExpressionVisitor.FromStatement;
         var predicates = _whereExpressionVisitor.Build();
 
         sqlBuilder.AppendRaw("select ");

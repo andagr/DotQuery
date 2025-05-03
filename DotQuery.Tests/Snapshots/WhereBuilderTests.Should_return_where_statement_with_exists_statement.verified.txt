@@ -1,1 +1,5 @@
-﻿
+﻿select *
+from [Order] as [o]
+where exists (select *
+from [Product] as [p]
+where [p].[Name] = [o].[Name])

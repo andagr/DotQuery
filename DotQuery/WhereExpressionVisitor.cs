@@ -187,7 +187,12 @@ internal class WhereExpressionVisitor : ExpressionVisitor
         else
         {
             // Handle regular member access
-            _builder.AppendRaw($"{node.Member.Name}");
+            var alias = node.Member.DeclaringType?.Name.ToLowerInvariant().First();
+            if (alias is not null)
+            {
+                _builder.AppendRaw($"[{alias}].");
+            }
+            _builder.AppendRaw($"[{node.Member.Name}]");
         }
 
         return node;

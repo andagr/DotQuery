@@ -1,2 +1,2 @@
-﻿select Name, Price
-from Order
+﻿select [o].[Name], [o].[Price]
+from [Order] as [o]

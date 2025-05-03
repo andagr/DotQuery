@@ -1,3 +1,3 @@
 ﻿select *
-from Order
-where Name = {0}
+from [Order] as [o]
+where [o].[Name] = {0}

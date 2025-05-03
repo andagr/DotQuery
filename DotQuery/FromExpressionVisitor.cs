@@ -4,10 +4,12 @@ namespace DotQuery;
 
 internal class FromExpressionVisitor : ExpressionVisitor
 {
-    public string FromTable { get; private set; } = "";
+    public string FromStatement { get; private set; } = "";
 
     public void HandleFrom(MethodCallExpression node)
     {
-        FromTable = node.Method.GetGenericArguments().Single().Name;
+        var tableName = node.Method.GetGenericArguments().Single().Name;
+        var alias = tableName.ToLowerInvariant().First();
+        FromStatement = $"[{tableName}] as [{alias}]";
     }
 }

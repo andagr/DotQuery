@@ -1,2 +1,2 @@
-﻿select Name
-from Order
+﻿select [o].[Name]
+from [Order] as [o]

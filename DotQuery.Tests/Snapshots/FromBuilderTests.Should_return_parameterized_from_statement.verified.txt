@@ -1,2 +1,2 @@
 ﻿select *
-from Order
+from [Order] as [o]

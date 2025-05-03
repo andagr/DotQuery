@@ -9,7 +9,12 @@ internal class SelectExpressionVisitor : ExpressionVisitor
 
     private readonly SqlFormattableStringBuilder _builder = new();
 
-    public SqlFormattableString Build() => _builder.Build();
+    public SqlFormattableString Build()
+    {
+        var sqlFormattableString = _builder.Build();
+        return sqlFormattableString;
+        // Todo: Handle table alias when *
+    }
 
     public void HandleSelect(MethodCallExpression node)
     {
@@ -61,7 +66,12 @@ internal class SelectExpressionVisitor : ExpressionVisitor
         {
             _builder.AppendRaw(", ");
         }
-        _builder.AppendRaw($"{node.Member.Name}");
+        var tableAlias = node.Member.DeclaringType?.Name.ToLowerInvariant().First();
+        if (tableAlias is not null)
+        {
+            _builder.AppendRaw($"[{tableAlias}].");
+        }
+        _builder.AppendRaw($"[{node.Member.Name}]");
         if (_aliases.TryGetValue(node.Member.Name, out var alias) && alias != node.Member.Name)
         {
             _builder.AppendRaw($" as {alias}");
